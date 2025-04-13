@@ -4,6 +4,7 @@ import Nav from "../../components/home/Nav";
 import { useCatProductsQuery } from "../../store/services/homeProducts";
 import ProductCard from "../../components/home/ProductCard";
 import Pagination from "../../components/Pagination";
+import EnhancedHeading from "../../components/home/EnhancedHeading";
 import ProductSkeleton from "../../components/home/ProductSkeleton";
 import ProductSearch from "../../components/home/ProductSearch";
 
@@ -16,19 +17,15 @@ const CatProducts = () => {
   return (
     <>
       <Nav />
-      <div className="mt-[70px]">
-        <Header>{name}</Header>
-      </div>
-      <div className="my-container my-10">
+
+      <div className="my-container mt-[70px] my-10">
         <ProductSearch category={name} />
         
         {isFetching ? (
           <ProductSkeleton />
         ) : data.count > 0 ? (
           <>
-            <p className="text-base font-medium text-gray-700">
-              {name} kategorisine ait {data.count} ürün bulundu.
-            </p>
+              <EnhancedHeading title={name} />
             <div className="flex flex-wrap -mx-5">
               {data.products.map((product) => {
                 return <ProductCard product={product} key={product._id} />;

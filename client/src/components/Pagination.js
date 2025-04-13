@@ -1,25 +1,36 @@
 import { Link } from "react-router-dom";
+
 const Pagination = ({ page, count, perPage, path, theme }) => {
   const totalLinks = Math.ceil(count / perPage);
   let startLoop = page;
   let diff = totalLinks - page;
+
   if (diff <= 3) {
     startLoop = totalLinks - 3;
   }
+
   let endLoop = startLoop + 3;
+
   if (startLoop <= 0) {
     startLoop = 1;
   }
+
+  // path parse edilecek, search parametresi varsa ayrılacak
+  const [basePath, searchQuery] = path.split("?"); 
+  const getLink = (pageNum) => {
+    return `/${basePath}/${pageNum}${searchQuery ? `?${searchQuery}` : ""}`;
+  };
+
   const links = () => {
     const allLinks = [];
-    for (let i = startLoop; i <= endLoop; i++) {
+    for (let i = startLoop; i <= endLoop && i <= totalLinks; i++) {
       allLinks.push(
         <li key={i} className="pagination-li">
           <Link
             className={` ${
               theme === "light" ? "pagination-link-light" : "pagination-link"
-            }  ${page === i && "bg-indigo-500 text-white"}`}
-            to={`/${path}/${i}`}
+            }  ${page === i ? "bg-indigo-500 text-white" : ""}`}
+            to={getLink(i)}
           >
             {i}
           </Link>
@@ -28,6 +39,7 @@ const Pagination = ({ page, count, perPage, path, theme }) => {
     }
     return allLinks;
   };
+
   const next = () => {
     if (page < totalLinks) {
       return (
@@ -36,7 +48,7 @@ const Pagination = ({ page, count, perPage, path, theme }) => {
             className={`${
               theme === "light" ? "pagination-link-light" : "pagination-link"
             }`}
-            to={`/${path}/${page + 1}`}
+            to={getLink(page + 1)}
           >
             <i className="bi bi-chevron-double-right"></i>
           </Link>
@@ -44,6 +56,7 @@ const Pagination = ({ page, count, perPage, path, theme }) => {
       );
     }
   };
+
   const prev = () => {
     if (page > 1) {
       return (
@@ -52,7 +65,7 @@ const Pagination = ({ page, count, perPage, path, theme }) => {
             className={`${
               theme === "light" ? "pagination-link-light" : "pagination-link"
             }`}
-            to={`/${path}/${page - 1}`}
+            to={getLink(page - 1)}
           >
             <i className="bi bi-chevron-double-left"></i>
           </Link>
@@ -60,14 +73,14 @@ const Pagination = ({ page, count, perPage, path, theme }) => {
       );
     }
   };
-  return (
-    count > perPage && (
-      <ul className="flex mt-2">
-        {prev()}
-        {links()}
-        {next()}
-      </ul>
-    )
-  );
+
+  return count > perPage ? (
+    <ul className="flex mt-2">
+      {prev()}
+      {links()}
+      {next()}
+    </ul>
+  ) : null;
 };
+
 export default Pagination;

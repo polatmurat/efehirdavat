@@ -18,7 +18,7 @@ const categoryService = createApi({
       create: builder.mutation({
         query: (name) => {
           return {
-            url: "create-category",
+            url: "/create-category",
             method: "POST",
             body: name,
           };
@@ -28,7 +28,7 @@ const categoryService = createApi({
       updateCategory: builder.mutation({
         query: (data) => {
           return {
-            url: `update-category/${data.id}`,
+            url: `/update-category/${data.id}`,
             method: "PUT",
             body: { name: data.name },
           };
@@ -38,7 +38,7 @@ const categoryService = createApi({
       deleteCategory: builder.mutation({
         query: (id) => {
           return {
-            url: `delete-category/${id}`,
+            url: `/delete-category/${id}`,
             method: "DELETE",
           };
         },
@@ -47,7 +47,7 @@ const categoryService = createApi({
       get: builder.query({
         query: (page) => {
           return {
-            url: `categories/${page}`,
+            url: `/categories/${page}`,
             method: "GET",
           };
         },
@@ -56,7 +56,7 @@ const categoryService = createApi({
       fetchCategory: builder.query({
         query: (id) => {
           return {
-            url: `fetch-category/${id}`,
+            url: `/fetch-category/${id}`,
             method: "GET",
           };
         },
@@ -65,7 +65,7 @@ const categoryService = createApi({
       allCategories: builder.query({
         query: () => {
           return {
-            url: "allcategories",
+            url: "/allcategories",
             method: "GET",
           };
         },
@@ -73,7 +73,7 @@ const categoryService = createApi({
       randomCategories: builder.query({
         query: () => {
           return {
-            url: "random-categories",
+            url: "/random-categories",
             method: "GET",
           };
         },

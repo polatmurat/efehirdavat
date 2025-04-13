@@ -10,7 +10,7 @@ const homeProducts = createApi({
       catProducts: builder.query({
         query: (params) => {
           return {
-            url: `cat-products/${params.name}/${params.page}`,
+            url: `/cat-products/${params.name}/${params.page}`,
             method: "GET",
           };
         },
@@ -18,7 +18,7 @@ const homeProducts = createApi({
       searchProducts: builder.query({
         query: (params) => {
           return {
-            url: `search-products/${params.keyword}/${params.page}`,
+            url: `/search-products/${params.keyword}/${params.page}`,
             method: "GET",
           };
         },

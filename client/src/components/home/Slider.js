@@ -1,11 +1,10 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper";
 import { Link } from "react-router-dom";
-import { useRandomCategoriesQuery } from "../../store/services/categoryService";
+import { useAllCategoriesQuery } from "../../store/services/categoryService";
 import Spinner from "../Spinner";
 const Slider = () => {
-  const { data, isFetching } = useRandomCategoriesQuery();
-  let i = 1;
+  const { data, isFetching } = useAllCategoriesQuery();
   return isFetching ? (
     <div className="my-container h-[70vh] flex items-center justify-center">
       <Spinner />
@@ -23,7 +22,7 @@ const Slider = () => {
           <SwiperSlide className="slide" key={cat._id}>
             <div className={`slide-img`}>
               <img
-                src={`./images/category_banners/${cat.name}.jpg`}
+                src={`../images/category_banners/${cat.name}.jpg`}
                 className="w-full h-full object-cover"
                 alt=""
               />

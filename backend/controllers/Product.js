@@ -35,7 +35,7 @@ class Product {
 
         // Sadece fiyat zorunlu, kategori zorunlu değil
         if (!parsedData.price || !(parseFloat(parsedData.price) > 0)) {
-          errors.push({ msg: "Price should be above $1" });
+          errors.push({ msg: "Price should be above 0" });
         }
 
         if (errors.length === 0) {
@@ -84,12 +84,12 @@ class Product {
           try {
             // Orijinal metinleri koru, normalize edilmiş versiyonları da ekle
             const title = parsedData.title || '';
-            const description = fields.description || '';
+            const description = parsedData.description || '';
             const normalizedTitle = normalizeText(title);
             const normalizedDescription = normalizeText(description);
-            const category = parsedData.category ? parsedData.category.toLowerCase() : 'diğer';
-
-
+            const category = typeof parsedData.category === 'string' ? parsedData.category.toLowerCase() : 'diğer';
+            const isAvailable = parsedData.hasOwnProperty("isAvailable") ? parsedData.isAvailable : true;
+          
             const response = await ProductModel.create({
               title: title,
               normalizedTitle: normalizedTitle,
@@ -98,6 +98,7 @@ class Product {
               discount: parseInt(parsedData.discount) || 0,
               stock: parseInt(parsedData.stock) || 0,
               category: category,
+              isAvailable: isAvailable,
               colors: parsedData.colors || [],
               sizes: fields.sizes ? JSON.parse(fields.sizes) : [],
               image1: images["image1"] ? images["image1"] : (typeof parsedData.image1 === 'string' ? parsedData.image1 : ''),
@@ -123,19 +124,21 @@ class Product {
   async get(req, res) {
     const { page = 1 } = req.params;
     const { search = '' } = req.query;
-    const perPage = 10;
+    const perPage = 52;
     const skip = (page - 1) * perPage;
 
     try {
       let query = {};
 
       if (search) {
+        const searchRegex = new RegExp(search, 'i');
+
 
         // Regex tabanlı arama
         query = {
           $or: [
-            { normalizedTitle: new RegExp(searchTerm, 'i') },
-            { normalizedDescription: new RegExp(searchTerm, 'i') }
+            { normalizedTitle: searchRegex },
+            { normalizedDescription: searchRegex }
           ]
         };
 
@@ -158,6 +161,7 @@ class Product {
     const { id } = req.params;
     try {
       const product = await ProductModel.findOne({ _id: id });
+
       return res.status(200).json(product);
     } catch (error) {
       console.log(error.message);
@@ -170,10 +174,12 @@ class Product {
       if (!err) {
         const parsedData = JSON.parse(fields.data);
         const errors = [];
+        const __dirname = path.resolve();
+
 
         // Sadece fiyat zorunlu, kategori zorunlu değil
-        if (!parsedData.price || parseInt(parsedData.price) < 1) {
-          errors.push({ msg: "Price should be above $1" });
+        if (!parsedData.price || !(parseFloat(parsedData.price) > 0)) {
+          errors.push({ msg: "Price should be above 0" });
         }
 
         if (errors.length === 0) {
@@ -184,7 +190,6 @@ class Product {
             const extension = mimeType.split("/")[1].toLowerCase();
             if (extension === "jpeg" || extension === "jpg" || extension === "png") {
               const imageName = uuidv4() + `.${extension}`;
-              const __dirname = path.resolve();
               const newPath = __dirname + `/../client/public/images/${imageName}`;
               images["image1"] = imageName;
               fs.copyFile(files["image1"].filepath, newPath, (err) => {
@@ -225,16 +230,17 @@ class Product {
             const description = fields.description || '';
             const normalizedTitle = normalizeText(title);
             const normalizedDescription = normalizeText(description);
-            const category = parsedData.category ? parsedData.category.toLowerCase() : 'diğer';
-
+            const category = typeof parsedData.category === 'string' ? parsedData.category.toLowerCase() : 'diğer';
+            const isAvailable = parsedData.hasOwnProperty("isAvailable") ? parsedData.isAvailable : true;
             const updateData = {
               title: title,
               normalizedTitle: normalizedTitle,
-              price: parseInt(parsedData.price),
+              price: parseFloat(parsedData.price),
               currency: parsedData.currency || 'TL',
               discount: parseInt(parsedData.discount) || 0,
               stock: parseInt(parsedData.stock) || 0,
               category: category,
+              isAvailable: isAvailable,
               description: description,
               normalizedDescription: normalizedDescription,
               sizes: fields.sizes ? JSON.parse(fields.sizes) : []
@@ -303,19 +309,5 @@ class Product {
     }
   }
 
-  // Tüm ürünlerin normalize edilmiş alanlarını güncelle
-  async del20prods(req, res) {
-    await ProductModel.find({})
-      .sort({ _id: -1 }) // ObjectId'ye göre en son eklenenler
-      .limit(20)
-      .then(async (products) => {
-        const ids = products.map(p => p._id);
-        await ProductModel.deleteMany({ _id: { $in: ids } });
-        console.log("Son 20 ürün silindi.");
-      });
-
-      return true;
-
-  }
 }
 module.exports = new Product();

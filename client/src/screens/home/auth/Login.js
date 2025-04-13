@@ -31,7 +31,7 @@ const Login = () => {
         if(response.isSuccess) {
           localStorage.setItem('userToken', response?.data?.token);
           dispatch(setUserToken(response?.data?.token))
-          navigate('/user');
+          navigate('/');
         }
       }, [response.isSuccess])
     return(

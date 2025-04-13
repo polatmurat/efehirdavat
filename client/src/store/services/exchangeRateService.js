@@ -6,7 +6,7 @@ export const exchangeRateService = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: process.env.REACT_APP_API_URL }),
   endpoints: (builder) => ({
     getExchangeRates: builder.query({
-      query: () => 'exchange-rate',
+      query: () => '/exchange-rate',
     }),
   }),
 });

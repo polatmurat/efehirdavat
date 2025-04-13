@@ -81,7 +81,6 @@ class HomeProducts {
         const response = await ProductModel.find(options)
           .skip(skip)
           .limit(perPage)
-          .populate("reviews")
           .sort({ updatedAt: -1 });
         
         return res.status(200).json({ products: response, perPage, count });
@@ -93,7 +92,6 @@ class HomeProducts {
       try {
         const response = await ProductModel.find(options)
           .limit(4)
-          .populate("reviews")
           .sort({ updatedAt: -1 });
         return res.status(200).json({ products: response });
       } catch (error) {

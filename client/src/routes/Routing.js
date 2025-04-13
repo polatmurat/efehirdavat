@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AdminLogin from "../screens/auth/AdminLogin";
 import Categories from "../screens/dashboard/Categories";
 import CreateCategory from "../screens/dashboard/CreateCategory";
@@ -19,11 +19,15 @@ import SearchProducts from "../screens/home/SearchProducts";
 import Users from '../screens/dashboard/Users'
 import CreateUser from '../screens/dashboard/CreateUser'
 import EditUser from '../screens/dashboard/EditUser'
+import AllProducts from "../screens/home/AllProducts.js";
 const Routing = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Navigate to="/page/1" />} />
+        <Route path="/page/:page" element={<Home />} />
+        <Route path="/all-products/:page" element={<AllProducts />} />
+        <Route path="*" element={<Navigate to="/page/1" />} />
         <Route path="cat-products/:name" element={<CatProducts />} />
         <Route path="cat-products/:name/:page" element={<CatProducts />} />
         <Route

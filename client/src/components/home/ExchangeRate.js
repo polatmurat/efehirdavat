@@ -8,7 +8,7 @@ function ExchangeRate() {
 
     return (
         <div className='-ml-3'>
-            <p> USD: {data.USD} | EUR: {data.EUR}</p>
+            <p> USD: {data.USD},00 | EUR: {data.EUR},00</p>
         </div>
     )
 }

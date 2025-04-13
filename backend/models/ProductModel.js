@@ -31,6 +31,10 @@ const productSchema = mongoose.Schema(
       type: String,
       default: "diğer",
     },
+    isAvailable: {
+      type: Boolean,
+      default: true 
+    },
     colors: {
       type: Array,
       default: [],

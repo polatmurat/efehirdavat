@@ -25,6 +25,7 @@ const CreateProduct = () => {
         discount: 0,
         stock: 0,
         category: '',
+        isAvailable: true,
         colors: [],
         image1: '',
         image2: '',
@@ -147,6 +148,10 @@ const CreateProduct = () => {
     const handleCurrencyChange = (currency) => {
         setState({ ...state, currency: currency });
     }
+
+    const handleAvailability = (isAvailable) => {
+        setState({ ...state, isAvailable: isAvailable });
+    }
     return (
         <Wrapper>
             <ScreenHeader>
@@ -198,12 +203,25 @@ const CreateProduct = () => {
                             </div>
                         </div>
                         <div className="w-full md:w-6/12 p-3">
-                            <label htmlFor="discount" className="label">İskonto</label>
-                            <input type="number" name="discount" className="form-control" id="discount" placeholder="iskonto..." onChange={handleInput} value={state.discount} />
+                            <label htmlFor="isAvailable" className="label">Stokta Mevcut Mu?</label>
+                            <button
+                                type="button"
+                                className={`size ${state.isAvailable === true ? 'bg-gray-100' : ''}`}
+                                onClick={() => handleAvailability(true)}
+                            >
+                                EVET
+                            </button>
+                            <button
+                                type="button"
+                                className={`size ${state.isAvailable === false ? 'bg-gray-100' : ''}`}
+                                onClick={() => handleAvailability(false)}
+                            >
+                                HAYIR
+                            </button>
                         </div>
                         <div className="w-full md:w-6/12 p-3">
-                            <label htmlFor="stock" className="label">Stok</label>
-                            <input type="number" name="stock" className="form-control" id="stock" placeholder="stok..." onChange={handleInput} value={state.stock} />
+                            <label htmlFor="stock" className="label">Koli İçi Adet</label>
+                            <input type="number" name="stock" className="form-control" id="stock" placeholder="Koli İçi Adet..." onChange={handleInput} value={state.stock} />
                         </div>
                         <div className="w-full md:w-6/12 p-3">
                             <label htmlFor="categories" className="label">Kategoriler</label>

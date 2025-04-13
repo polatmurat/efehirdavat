@@ -5,9 +5,8 @@ const Product = require("../controllers/Product");
 const Authorization = require("../services/Authorization");
 const productValidations = require("../validations/productValidations");
 
-router.post("/create-product", Product.create);
-router.get("/products/:page", Authorization.authorized, Product.get);
-router.get("/del20prod", Product.del20prods);
+router.post("/create-product", [Authorization.authorized], Product.create);
+router.get("/products/:page", Product.get);
 router.get("/product/:id", Product.getProduct);
 router.put(
   "/product",

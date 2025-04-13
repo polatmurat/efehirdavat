@@ -25,13 +25,15 @@ const EditProduct = () => {
   const { data: product, isFetching: fetching } = useGetProductQuery(id);
   const { data = [], isFetching } = useAllCategoriesQuery();
   const [value, setValue] = useState("");
+    
   const [state, setState] = useState({
     title: "",
     price: 0,
-    currency: "TL", // Varsayılan para birimi
+    currency: "TL",
     discount: 0,
     stock: 0,
     category: "",
+    isAvailable: true,
     colors: [],
     image1: '',
     image2: '',
@@ -88,6 +90,10 @@ const EditProduct = () => {
   const handleCurrencyChange = (currency) => {
     setState({ ...state, currency: currency });
   };
+
+  const handleAvailability = (isAvailable) => {
+    setState({ ...state, isAvailable: isAvailable });
+  }
 
   const saveColors = (color) => {
     const filtered = state.colors.filter((clr) => clr.color !== color.hex);
@@ -168,14 +174,16 @@ const EditProduct = () => {
     setState({ ...state, description: value });
   }, [value]);
   useEffect(() => {
-    if (!fetching) {
-      setState({
+    if (!fetching && product) {
+      setState((prev) => ({
+        ...prev,
         ...product,
         image1: '',
         image2: '',
         image3: '',
-        currency: product.currency || 'TL' // Eğer üründe currency yoksa varsayılan olarak TL
-      });
+        currency: product.currency || 'TL',
+        isAvailable: typeof product.isAvailable === 'boolean' ? product.isAvailable : true,
+      }));
       setSizeList(product.sizes);
       setValue(h2p(product.description));
 
@@ -261,33 +269,43 @@ const EditProduct = () => {
                     >
                       $
                     </button>
+                    <button
+                      type="button"
+                      className={`size ${state.currency === 'EUR' ? 'bg-gray-100' : ''}`}
+                      onClick={() => handleCurrencyChange('EUR')}
+                    >
+                      €
+                    </button>
                   </div>
                 </div>
               </div>
               <div className="w-full md:w-6/12 p-3">
-                <label htmlFor="discount" className="label">
-                  İskonto
-                </label>
-                <input
-                  type="number"
-                  name="discount"
-                  className="form-control"
-                  id="discount"
-                  placeholder="İskonto..."
-                  onChange={handleInput}
-                  value={state.discount}
-                />
+                <label htmlFor="isAvailable" className="label">Stokta Mevcut Mu?</label>
+                <button
+                  type="button"
+                  className={`size ${state.isAvailable === true ? 'bg-gray-100' : ''}`}
+                  onClick={() => handleAvailability(true)}
+                >
+                  EVET
+                </button>
+                <button
+                  type="button"
+                  className={`size ${state.isAvailable === false ? 'bg-gray-100' : ''}`}
+                  onClick={() => handleAvailability(false)}
+                >
+                  HAYIR
+                </button>
               </div>
               <div className="w-full md:w-6/12 p-3">
                 <label htmlFor="stock" className="label">
-                  Stock
+                  Koli İçi Adet
                 </label>
                 <input
                   type="number"
                   name="stock"
                   className="form-control"
                   id="stock"
-                  placeholder="Stock..."
+                  placeholder="Koli İçi Adet..."
                   onChange={handleInput}
                   value={state.stock}
                 />

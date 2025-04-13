@@ -6,8 +6,7 @@ import Search from "./Search";
 import { toggleSearchBar } from "../../store/reducers/globalReducer";
 import ExchangeRate from "./ExchangeRate";
 const Nav = () => {
-  const { userToken, user } = useSelector((state) => state.authReducer);  
-  const { searchBar } = useSelector((state) => state.globalReducer);
+  const { user } = useSelector((state) => state.authReducer);
   const dispatch = useDispatch();
   return (
     <>
@@ -19,11 +18,13 @@ const Nav = () => {
             </Link>
             <ul className="flex items-center">
               <li className="nav-li cursor-pointer">
-                <FiSearch
-                  size={22}
-                  onClick={() => dispatch(toggleSearchBar())}
-                />
+                <FiSearch size={22} onClick={() => dispatch(toggleSearchBar())} />
               </li>
+  
+              <li className="nav-li">
+                <Link to="/all-products/1">Tüm Ürünler</Link>
+              </li>
+  
               {user ? (
                 <li className="nav-li">
                   <Link to="/user" className="nav-link">
@@ -37,17 +38,19 @@ const Nav = () => {
                   </Link>
                 </li>
               )}
-
-              <li className="nav-li">
-                <ExchangeRate />
-              </li>
-
             </ul>
           </div>
         </div>
       </nav>
+  
       <Search />
+  
+      {/* Alt köşede sabit duran ExchangeRate kutusu */}
+      <div className="fixed top-20 right-4 bg-white/80 backdrop-blur-md shadow-md rounded-lg px-8 py-2 text-sm z-50">
+        <ExchangeRate />
+      </div>
     </>
   );
+  
 };
 export default Nav;
