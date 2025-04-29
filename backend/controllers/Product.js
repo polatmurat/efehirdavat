@@ -122,7 +122,7 @@ class Product {
     });
   }
   async get(req, res) {
-    const { page = 1 } = req.params;
+    const page = parseInt(req.params.page) || 1;
     const { search = '' } = req.query;
     const perPage = 52;
     const skip = (page - 1) * perPage;
@@ -149,7 +149,7 @@ class Product {
       const response = await ProductModel.find(query)
         .skip(skip)
         .limit(perPage)
-        .sort({ updatedAt: -1 });
+        .sort({ createdAt: -1, _id: 1 });
 
       return res.status(200).json({ products: response, perPage, count });
     } catch (error) {

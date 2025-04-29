@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import h2p from "html2plaintext";
 import htmlParser from "html-react-parser";
 import { Toaster } from "react-hot-toast";
-import { BsCheck2, BsCart3, BsArrowLeft, BsInfoCircle } from "react-icons/bs";
+import { BsCheck2, BsArrowLeft, BsInfoCircle } from "react-icons/bs";
 import { BiCube } from "react-icons/bi";
 import { MdOutlineColorLens } from "react-icons/md";
 import { TbRuler } from "react-icons/tb";
@@ -16,6 +16,9 @@ import { Link } from "react-router-dom";
 
 const DetailsCard = ({ product }) => {
   const { userToken, adminToken } = useSelector(state => state.authReducer);
+
+  console.log(product);
+  
 
   const [sizeState, setSizeState] = useState(
     product?.sizes?.length > 0 ? product.sizes[0] : null
@@ -161,16 +164,16 @@ const DetailsCard = ({ product }) => {
                 {product.sizes.map((size, index) => (
                   <motion.button
                     key={index}
-                    onClick={() => setSizeState(size.name)}
+                    onClick={() => setSizeState(size)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
-                      sizeState === size.name 
+                      sizeState === size 
                         ? 'bg-indigo-600 text-white' 
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {size.name}
+                    {size}
                   </motion.button>
                 ))}
               </div>
