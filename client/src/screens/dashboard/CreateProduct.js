@@ -14,7 +14,9 @@ import Spinner from "../../components/Spinner"
 import Colors from "../../components/Colors";
 import SizesList from "../../components/SizesList";
 import ImagesPreview from "../../components/ImagesPreview";
+import ProductVariations from "../../components/ProductVariations";
 import { setSuccess } from "../../store/reducers/globalReducer";
+
 const CreateProduct = () => {
     const { data = [], isFetching } = useAllCategoriesQuery();
     const [value, setValue] = useState('');
@@ -42,8 +44,8 @@ const CreateProduct = () => {
         image1: '',
         image2: '',
         image3: ''
-    })
-
+    });
+    const [variations, setVariations] = useState([]);
 
     const imageHandle = e => {
         if (e.target.files.length !== 0) {
@@ -106,6 +108,10 @@ const CreateProduct = () => {
         setSizeList(filtered);
     }
 
+    const handleVariationsChange = (updatedVariations) => {
+        setVariations(updatedVariations);
+    }
+
     const [createNewProduct, response] = useCProductMutation();
     const createPro = e => {
         e.preventDefault();
@@ -113,6 +119,20 @@ const CreateProduct = () => {
 
         // Ürün verilerini hazırla
         const productData = { ...state };
+
+        // Eğer ana fiyat ve stok girilmemişse, varyasyonlardan en düşük fiyatlı olanı kullan
+        if (variations.length > 0) {
+            const lowestPriceVariation = variations.reduce((lowest, current) => {
+                return current.price < lowest.price ? current : lowest;
+            }, variations[0]);
+
+            if (!productData.price || productData.price <= 0) {
+                productData.price = lowestPriceVariation.price;
+            }
+            if (!productData.stock || productData.stock <= 0) {
+                productData.stock = lowestPriceVariation.stock;
+            }
+        }
 
         // URL ile girilen resimleri ekle
         if (imageUrls.image1) productData.image1 = imageUrls.image1;
@@ -122,6 +142,7 @@ const CreateProduct = () => {
         formData.append('data', JSON.stringify(productData));
         formData.append('sizes', JSON.stringify(sizeList));
         formData.append('description', value);
+        formData.append('variations', JSON.stringify(variations));
 
         // Dosya olarak yüklenen resimleri ekle
         if (state.image1 && state.image1 instanceof File) formData.append('image1', state.image1);
@@ -131,10 +152,11 @@ const CreateProduct = () => {
         createNewProduct(formData);
     }
     useEffect(() => {
-        if (!response.isSuccess) {
-            response?.error?.data?.errors.map(err => {
-                toast.error(err.msg);
-            })
+        if (!response.isSuccess && response?.error?.data?.errors) {
+            // Handle validation errors
+            Object.values(response.error.data.errors).forEach(err => {
+                toast.error(err.properties?.message || 'Validation error');
+            });
         }
     }, [response?.error?.data?.errors])
     const dispatch = useDispatch();
@@ -260,6 +282,14 @@ const CreateProduct = () => {
                                     </button>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Ürün Varyasyonları */}
+                        <div className="w-full p-3">
+                            <ProductVariations 
+                                variations={variations} 
+                                onVariationsChange={handleVariationsChange} 
+                            />
                         </div>
 
                         {/* Resim 1 */}
