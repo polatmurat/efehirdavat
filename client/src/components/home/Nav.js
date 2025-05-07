@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import Search from "./Search";
 import { toggleSearchBar } from "../../store/reducers/globalReducer";
 import ExchangeRate from "./ExchangeRate";
+
 const Nav = () => {
   const { user } = useSelector((state) => state.authReducer);
   const dispatch = useDispatch();
@@ -24,7 +25,7 @@ const Nav = () => {
               <li className="nav-li">
                 <Link to="/all-products/1">Tüm Ürünler</Link>
               </li>
-  
+
               {user ? (
                 <li className="nav-li">
                   <Link to="/user" className="nav-link">

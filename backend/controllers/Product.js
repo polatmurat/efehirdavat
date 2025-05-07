@@ -25,6 +25,26 @@ function normalizeText(text) {
   return normalized;
 }
 
+// Varyasyonların toplamını hesaplayan yardımcı fonksiyon
+function calculateTotals(variations) {
+  if (!variations || !Array.isArray(variations) || variations.length === 0) {
+    return { totalStock: 0, basePrice: 0 };
+  }
+
+  let totalStock = 0;
+  // Baz fiyat olarak en düşük varyasyon fiyatını kullanalım
+  let basePrice = variations[0].price;
+
+  variations.forEach(variation => {
+    totalStock += parseInt(variation.stock) || 0;
+    if (variation.price < basePrice) {
+      basePrice = variation.price;
+    }
+  });
+
+  return { totalStock, basePrice };
+}
+
 class Product {
   async create(req, res) {
     const form = formidable({ multiples: true });
@@ -33,9 +53,13 @@ class Product {
         const parsedData = JSON.parse(fields.data);
         const errors = [];
 
-        // Sadece fiyat zorunlu, kategori zorunlu değil
-        if (!parsedData.price || !(parseFloat(parsedData.price) > 0)) {
-          errors.push({ msg: "Price should be above 0" });
+        // Ürünün en az bir fiyatı olmalı - ya ana fiyat ya da varyasyonlar
+        const variations = fields.variations ? JSON.parse(fields.variations) : [];
+        const hasValidPrice = (parsedData.price && parseFloat(parsedData.price) > 0) ||
+          (variations.length > 0 && variations.some(v => parseFloat(v.price) > 0));
+
+        if (!hasValidPrice) {
+          errors.push({ msg: "Ürün için geçerli bir fiyat belirtilmelidir" });
         }
 
         if (errors.length === 0) {
@@ -84,23 +108,41 @@ class Product {
           try {
             // Orijinal metinleri koru, normalize edilmiş versiyonları da ekle
             const title = parsedData.title || '';
-            const description = parsedData.description || '';
+            const description = fields.description || '';
             const normalizedTitle = normalizeText(title);
             const normalizedDescription = normalizeText(description);
             const category = typeof parsedData.category === 'string' ? parsedData.category.toLowerCase() : 'diğer';
             const isAvailable = parsedData.hasOwnProperty("isAvailable") ? parsedData.isAvailable : true;
-          
+
+            // Varyasyonlar varsa stock ve price hesapla
+            let basePrice = parseFloat(parsedData.price) || 0;
+            let totalStock = parseInt(parsedData.stock) || 0;
+
+            // Varyasyonlar varsa onların fiyat ve stoklarını kullan
+            if (variations.length > 0) {
+              const { totalStock: varTotalStock, basePrice: varBasePrice } = calculateTotals(variations);
+
+              // Eğer ana ürün fiyatı belirtilmemişse varyasyonların en düşük fiyatını kullan
+              if (!parsedData.price || parseFloat(parsedData.price) <= 0) {
+                basePrice = varBasePrice;
+              }
+
+              // Eğer ana ürün stoku belirtilmemişse varyasyonların toplam stokunu kullan
+              if (!parsedData.stock || parseInt(parsedData.stock) <= 0) {
+                totalStock = varTotalStock;
+              }
+            }
+
             const response = await ProductModel.create({
               title: title,
               normalizedTitle: normalizedTitle,
-              price: parseFloat(parsedData.price),
-              currency: parsedData.currency,
+              price: basePrice,
+              currency: parsedData.currency || 'TL',
               discount: parseInt(parsedData.discount) || 0,
-              stock: parseInt(parsedData.stock) || 0,
+              stock: totalStock,
               category: category,
               isAvailable: isAvailable,
-              colors: parsedData.colors || [],
-              sizes: fields.sizes ? JSON.parse(fields.sizes) : [],
+              variations: variations,
               image1: images["image1"] ? images["image1"] : (typeof parsedData.image1 === 'string' ? parsedData.image1 : ''),
               image2: images["image2"] ? images["image2"] : (typeof parsedData.image2 === 'string' ? parsedData.image2 : ''),
               image3: images["image3"] ? images["image3"] : (typeof parsedData.image3 === 'string' ? parsedData.image3 : ''),
@@ -108,9 +150,7 @@ class Product {
               normalizedDescription: normalizedDescription
             });
 
-
-
-            return res.status(201).json({ msg: "Product has created", response });
+            return res.status(201).json({ msg: "Ürün başarıyla oluşturuldu", response });
           } catch (error) {
             console.log(error);
             return res.status(500).json(error);
@@ -121,8 +161,9 @@ class Product {
       }
     });
   }
+
   async get(req, res) {
-    const { page = 1 } = req.params;
+    const page = parseInt(req.params.page) || 1;
     const { search = '' } = req.query;
     const perPage = 52;
     const skip = (page - 1) * perPage;
@@ -133,7 +174,6 @@ class Product {
       if (search) {
         const searchRegex = new RegExp(search, 'i');
 
-
         // Regex tabanlı arama
         query = {
           $or: [
@@ -141,7 +181,6 @@ class Product {
             { normalizedDescription: searchRegex }
           ]
         };
-
       }
 
       const count = await ProductModel.find(query).countDocuments();
@@ -149,7 +188,7 @@ class Product {
       const response = await ProductModel.find(query)
         .skip(skip)
         .limit(perPage)
-        .sort({ updatedAt: -1 });
+        .sort({ createdAt: -1, _id: 1 });
 
       return res.status(200).json({ products: response, perPage, count });
     } catch (error) {
@@ -157,6 +196,7 @@ class Product {
       return res.status(500).json({ error: error.message });
     }
   }
+
   async getProduct(req, res) {
     const { id } = req.params;
     try {
@@ -168,6 +208,7 @@ class Product {
       return res.status(500).json({ error: error.message });
     }
   }
+
   async updateProduct(req, res) {
     const form = formidable({ multiples: true });
     form.parse(req, async (err, fields, files) => {
@@ -176,10 +217,13 @@ class Product {
         const errors = [];
         const __dirname = path.resolve();
 
+        // Ürünün en az bir fiyatı olmalı - ya ana fiyat ya da varyasyonlar
+        const variations = fields.variations ? JSON.parse(fields.variations) : [];
+        const hasValidPrice = (parsedData.price && parseFloat(parsedData.price) > 0) ||
+          (variations.length > 0 && variations.some(v => parseFloat(v.price) > 0));
 
-        // Sadece fiyat zorunlu, kategori zorunlu değil
-        if (!parsedData.price || !(parseFloat(parsedData.price) > 0)) {
-          errors.push({ msg: "Price should be above 0" });
+        if (!hasValidPrice) {
+          errors.push({ msg: "Ürün için geçerli bir fiyat belirtilmelidir" });
         }
 
         if (errors.length === 0) {
@@ -232,23 +276,39 @@ class Product {
             const normalizedDescription = normalizeText(description);
             const category = typeof parsedData.category === 'string' ? parsedData.category.toLowerCase() : 'diğer';
             const isAvailable = parsedData.hasOwnProperty("isAvailable") ? parsedData.isAvailable : true;
+
+            // Varyasyonlar varsa stock ve price hesapla
+            let basePrice = parseFloat(parsedData.price) || 0;
+            let totalStock = parseInt(parsedData.stock) || 0;
+
+            // Varyasyonlar varsa onların fiyat ve stoklarını kullan
+            if (variations.length > 0) {
+              const { totalStock: varTotalStock, basePrice: varBasePrice } = calculateTotals(variations);
+
+              // Eğer ana ürün fiyatı belirtilmemişse varyasyonların en düşük fiyatını kullan
+              if (!parsedData.price || parseFloat(parsedData.price) <= 0) {
+                basePrice = varBasePrice;
+              }
+
+              // Eğer ana ürün stoku belirtilmemişse varyasyonların toplam stokunu kullan
+              if (!parsedData.stock || parseInt(parsedData.stock) <= 0) {
+                totalStock = varTotalStock;
+              }
+            }
+
             const updateData = {
               title: title,
               normalizedTitle: normalizedTitle,
-              price: parseFloat(parsedData.price),
+              price: basePrice,
               currency: parsedData.currency || 'TL',
               discount: parseInt(parsedData.discount) || 0,
-              stock: parseInt(parsedData.stock) || 0,
+              stock: totalStock,
               category: category,
               isAvailable: isAvailable,
               description: description,
               normalizedDescription: normalizedDescription,
-              sizes: fields.sizes ? JSON.parse(fields.sizes) : []
+              variations: variations
             };
-
-            if (parsedData.colors && Array.isArray(parsedData.colors)) {
-              updateData.colors = parsedData.colors;
-            }
 
             if (images["image1"]) updateData.image1 = images["image1"];
             if (images["image2"]) updateData.image2 = images["image2"];
@@ -265,10 +325,10 @@ class Product {
             );
 
             if (!updatedProduct) {
-              return res.status(404).json({ msg: "Product not found" });
+              return res.status(404).json({ msg: "Ürün bulunamadı" });
             }
 
-            return res.status(200).json({ msg: "Product has been updated successfully", product: updatedProduct });
+            return res.status(200).json({ msg: "Ürün başarıyla güncellendi", product: updatedProduct });
           } catch (error) {
             console.log(error);
             return res.status(500).json(error);
@@ -279,6 +339,7 @@ class Product {
       }
     });
   }
+
   async deleteProduct(req, res) {
     const { id } = req.params;
     try {
@@ -302,12 +363,21 @@ class Product {
       }
 
       await ProductModel.findByIdAndDelete(id);
-      return res.status(200).json({ msg: "Product has been deleted successfully" });
+      return res.status(200).json({ msg: "Ürün başarıyla silindi" });
     } catch (error) {
-      console.error("Product can't deleted:", error.message);
+      console.error("Ürün silinemedi:", error.message);
       return res.status(500).json({ error: error.message });
     }
   }
 
+  async deleteAll(req, res) {
+    try {
+      await ProductModel.deleteMany({});
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
 }
+
 module.exports = new Product();

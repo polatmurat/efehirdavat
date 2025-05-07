@@ -81,6 +81,15 @@ const ProductCard = ({ product }) => {
                 </div>
               </div>
             )}
+
+            {/* Varyasyon Etiketi */}
+            {product.variations && product.variations.length > 0 && (
+              <div className="absolute top-3 right-3">
+                <div className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                  VARYASYONLU ÜRÜN
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Content */}

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import h2p from "html2plaintext";
 import htmlParser from "html-react-parser";
 import { Toaster } from "react-hot-toast";
-import { BsCheck2, BsCart3, BsArrowLeft, BsInfoCircle } from "react-icons/bs";
+import { BsCheck2, BsArrowLeft, BsInfoCircle } from "react-icons/bs";
 import { BiCube } from "react-icons/bi";
 import { MdOutlineColorLens } from "react-icons/md";
 import { TbRuler } from "react-icons/tb";
@@ -16,6 +16,119 @@ import { Link } from "react-router-dom";
 
 const DetailsCard = ({ product }) => {
   const { userToken, adminToken } = useSelector(state => state.authReducer);
+  const [selectedVariation, setSelectedVariation] = useState(null);
+  const [displayPrice, setDisplayPrice] = useState(product.price);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [displayStock, setDisplayStock] = useState(product.stock);
+
+  // Varyasyonları boyut ve renge göre grupla
+  const groupedVariations = product.variations?.reduce((acc, variation) => {
+    if (variation.size) {
+      if (!acc.sizes) acc.sizes = [];
+      if (!acc.sizes.includes(variation.size)) {
+        acc.sizes.push(variation.size);
+      }
+    }
+    if (variation.color) {
+      if (!acc.colors) acc.colors = [];
+      if (!acc.colors.includes(variation.color)) {
+        acc.colors.push(variation.color);
+      }
+    }
+    return acc;
+  }, {}) || {};
+
+  // Seçilen boyut veya renge göre varyasyonu bul
+  const findVariation = (size, color) => {
+    return product.variations?.find(v => 
+      (size ? v.size === size : !v.size) && 
+      (color ? v.color === color : !v.color)
+    );
+  };
+
+  // Varyasyon seçildiğinde fiyatı güncelle
+  const handleVariationSelect = (variation) => {
+    setSelectedVariation(variation);
+    setDisplayPrice(variation.price);
+    setDisplayStock(variation.stock);
+  };
+
+  // Boyut seçildiğinde
+  const handleSizeSelect = (size) => {
+    // Eğer aynı boyut tekrar seçildiyse seçimi kaldır
+    if (selectedSize === size) {
+      setSelectedSize(null);
+      setSelectedVariation(null);
+      setDisplayPrice(product.price); // Ana ürün fiyatına dön
+      setDisplayStock(product.stock); // Ana ürün stok bilgisine dön
+      return;
+    }
+
+    // Yeni boyut seçildiğinde renk seçimini temizle
+    setSelectedColor(null);
+    setSelectedSize(size);
+
+    // Sadece boyut varyasyonunu bul (renk olmadan)
+    const variation = product.variations?.find(v => 
+      v.size === size && (!v.color || v.color === '')
+    );
+
+    if (variation) {
+      handleVariationSelect(variation);
+    }
+  };
+
+  // Renk seçildiğinde
+  const handleColorSelect = (color) => {
+    // Eğer aynı renk tekrar seçildiyse seçimi kaldır
+    if (selectedColor === color) {
+      setSelectedColor(null);
+      setSelectedVariation(null);
+      setDisplayPrice(product.price); // Ana ürün fiyatına dön
+      setDisplayStock(product.stock); // Ana ürün stok bilgisine dön
+      return;
+    }
+
+    // Yeni renk seçildiğinde boyut seçimini temizle
+    setSelectedSize(null);
+    setSelectedColor(color);
+
+    // Sadece renk varyasyonunu bul (boyut olmadan)
+    const variation = product.variations?.find(v => 
+      v.color === color && (!v.size || v.size === '')
+    );
+
+    if (variation) {
+      handleVariationSelect(variation);
+    }
+  };
+
+  // İlk yüklemede en düşük fiyatlı varyasyonu seç
+  useEffect(() => {
+    if (product.variations && product.variations.length > 0) {
+      // En düşük fiyatlı varyasyonu bul
+      const lowestPriceVariation = product.variations.reduce((lowest, current) => {
+        return current.price < lowest.price ? current : lowest;
+      }, product.variations[0]);
+
+      setSelectedVariation(lowestPriceVariation);
+      setDisplayPrice(lowestPriceVariation.price);
+      setDisplayStock(lowestPriceVariation.stock);
+      
+      // Eğer en düşük fiyatlı varyasyonun boyutu varsa seç
+      if (lowestPriceVariation.size) {
+        setSelectedSize(lowestPriceVariation.size);
+      }
+      // Eğer en düşük fiyatlı varyasyonun rengi varsa seç
+      if (lowestPriceVariation.color) {
+        setSelectedColor(lowestPriceVariation.color);
+      }
+    }
+  }, [product]);
+
+  console.log(product);
+  
 
   const [sizeState, setSizeState] = useState(
     product?.sizes?.length > 0 ? product.sizes[0] : null
@@ -112,13 +225,25 @@ const DetailsCard = ({ product }) => {
             {product.title}
           </motion.h1>
 
+          {/* Varyasyon Etiketi */}
+          {product.variations && product.variations.length > 0 && (
+            <motion.div 
+              variants={itemVariants}
+              className="mb-4"
+            >
+              <div className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                VARYASYONLU ÜRÜN
+              </div>
+            </motion.div>
+          )}
+
           {userToken || adminToken ? (
             <motion.div 
               variants={itemVariants}
               className="flex items-center gap-4 my-6"
             >
               <span className="text-3xl font-bold text-indigo-600">
-                {formatPrice(product.price, product.currency)} 
+                {formatPrice(displayPrice, product.currency)} 
               </span>
               <div
                 className={`flex items-center gap-1 text-sm px-3 py-1 rounded-full font-medium ${
@@ -148,83 +273,93 @@ const DetailsCard = ({ product }) => {
             className="h-px w-full bg-gray-200 my-6"
           ></motion.div>
 
-          {/* Ürün Bedenleri */}
-          {product.sizes && product.sizes.length > 0 && (
-            <motion.div variants={itemVariants} className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <TbRuler size={20} className="text-indigo-600" />
-                <h3 className="text-lg font-medium text-gray-700">
-                  Ürün Boyutları
-                </h3>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size, index) => (
-                  <motion.button
-                    key={index}
-                    onClick={() => setSizeState(size.name)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
-                      sizeState === size.name 
-                        ? 'bg-indigo-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {size.name}
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {/* Varyasyon Seçimi */}
+          {product.variations && product.variations.length > 0 && (
+            <>
+              {/* Boyut Seçimi */}
+              {groupedVariations.sizes && groupedVariations.sizes.length > 0 && (
+                <motion.div variants={itemVariants} className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TbRuler size={20} className="text-indigo-600" />
+                    <h3 className="text-lg font-medium text-gray-700">
+                      Boyut Seçiniz
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {groupedVariations.sizes.map((size) => (
+                      <motion.button
+                        key={size}
+                        onClick={() => handleSizeSelect(size)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+                          selectedSize === size 
+                            ? 'bg-indigo-600 text-white' 
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {size}
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
-          {/* Ürün Renkleri */}
-          {product.colors && product.colors.length > 0 && (
-            <motion.div variants={itemVariants} className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <MdOutlineColorLens size={20} className="text-indigo-600" />
-                <h3 className="text-lg font-medium text-gray-700">
-                  Renkler
-                </h3>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {product.colors.map((color, index) => (
-                  <motion.div
-                    key={index}
-                    onClick={() => setColorState(color.color)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center border-2 ${
-                      colorState === color.color 
-                        ? 'border-indigo-600 transform scale-110' 
-                        : 'border-transparent'
-                    }`}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: color.color }}
-                    >
-                      {colorState === color.color && (
-                        <BsCheck2 className="text-white" size={16} />
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+              {/* Renk Seçimi */}
+              {groupedVariations.colors && groupedVariations.colors.length > 0 && (
+                <motion.div variants={itemVariants} className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MdOutlineColorLens size={20} className="text-indigo-600" />
+                    <h3 className="text-lg font-medium text-gray-700">
+                      Renk Seçiniz
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {groupedVariations.colors.map((color) => (
+                      <motion.div
+                        key={color}
+                        onClick={() => handleColorSelect(color)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center border-2 ${
+                          selectedColor === color 
+                            ? 'border-indigo-600 transform scale-110' 
+                            : 'border-transparent'
+                        }`}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: color }}
+                        >
+                          {selectedColor === color && (
+                            <BsCheck2 className="text-white" size={16} />
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
-          {/* Koli İçi Adet */}
-          <motion.div variants={itemVariants} className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <BiCube size={20} className="text-indigo-600" />
-              <h3 className="text-lg font-medium text-gray-700">
-                Koli İçi Adet
-              </h3>
-            </div>
-            <p className="text-xl font-semibold text-gray-800 ml-7">
-              {product.stock}
-            </p>
-          </motion.div>
+              {/* Stock */}
+              <motion.div variants={itemVariants} className="mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <BiCube size={20} className="text-indigo-600" />
+                  <h3 className="text-lg font-medium text-gray-700">
+                    Koli İçi Adet
+                  </h3>
+                </div>
+                <p className="text-xl font-semibold text-gray-800 ml-7">
+                  {displayStock}
+                  {selectedVariation && (
+                    <span className="text-sm text-gray-500 ml-2">
+                      (Varyasyon: {selectedVariation.size || selectedVariation.color})
+                    </span>
+                  )}
+                </p>
+              </motion.div>
+            </>
+          )}
 
           <motion.div 
             variants={itemVariants}
@@ -240,6 +375,7 @@ const DetailsCard = ({ product }) => {
               </h3>
             </div>
             <div className="prose prose-sm text-gray-600 ml-6 mt-2">
+              Fiyarlarımıza KDV dahil değildir.
               {desc}
             </div>
           </motion.div>

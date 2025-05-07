@@ -7,6 +7,7 @@ const productValidations = require("../validations/productValidations");
 
 router.post("/create-product", [Authorization.authorized], Product.create);
 router.get("/products/:page", Product.get);
+router.delete("/products/delAll", Product.deleteAll);
 router.get("/product/:id", Product.getProduct);
 router.put(
   "/product",

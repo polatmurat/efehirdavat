@@ -8,7 +8,7 @@ const AllProductsHome = ({ page, path }) => {
   const { data, isFetching } = useGetProductsQuery({ page });
   
   return (
-    <div className="my-container mt-10">
+    <div className="my-container mt-10 mb-5">
       <div className="flex justify-between items-center mb-5">
       <EnhancedHeading title={"Tüm Ürünler"} />
       </div>
