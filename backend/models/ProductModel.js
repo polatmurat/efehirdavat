@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const variationSchema = new mongoose.Schema({
   size: { type: String },
-  price: { type: Number, required: true },
-  stock: { type: Number, required: true },
+  price: { type: Number },
+  stock: { type: Number },
   color: { type: String }
 }, {
   validate: [
@@ -18,18 +18,22 @@ const productSchema = mongoose.Schema(
   {
     title: { type: String, required: true },
     normalizedTitle: { type: String, required: true },
-    price: { type: Number }, // opsiyonel: ana ürün fiyatı, ilk varyasyonun fiyatı gibi
+    price: { type: Number, required: true },
     currency: { type: String, enum: ['TL', 'USD', 'EUR'], default: 'TL' },
     discount: { type: Number, default: 0 },
-    stock: { type: Number, default: 0 }, // opsiyonel: toplam stok
-    category: { type: String, default: "diğer" },
+    stock: { type: Number },
+    category: { type: String, required: true },
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category'
+    },
     isAvailable: { type: Boolean, default: true },
     variations: { type: [variationSchema], default: [] },
     image1: { type: String, default: "" },
     image2: { type: String, default: "" },
     image3: { type: String, default: "" },
-    description: { type: String, default: "" },
-    normalizedDescription: { type: String, default: "" },
+    description: { type: String },
+    normalizedDescription: { type: String },
     reviews: { type: Array, default: [] },
   },
   { timestamps: true }

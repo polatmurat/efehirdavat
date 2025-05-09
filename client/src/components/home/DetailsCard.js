@@ -51,7 +51,7 @@ const DetailsCard = ({ product }) => {
   const handleVariationSelect = (variation) => {
     setSelectedVariation(variation);
     setDisplayPrice(variation.price);
-    setDisplayStock(variation.stock);
+    setDisplayStock(variation.stock ? variation.stock : product.stock);
   };
 
   // Boyut seçildiğinde
@@ -215,7 +215,7 @@ const DetailsCard = ({ product }) => {
             <BsArrowLeft size={16} />
             <span className="text-sm">Katalog</span>
             <span className="text-sm">/</span>
-            <Link to={`/cat-products/${product.category}`} className="text-sm capitalize">{product.category || 'Ürün'}</Link>
+            <Link to={`/cat-products/${product.categoryId}`} className="text-sm capitalize">{product.category || 'Ürün'}</Link>
           </motion.div>
 
           <motion.h1 
@@ -243,7 +243,7 @@ const DetailsCard = ({ product }) => {
               className="flex items-center gap-4 my-6"
             >
               <span className="text-3xl font-bold text-indigo-600">
-                {formatPrice(displayPrice, product.currency)} 
+                {formatPrice(selectedVariation ? (selectedVariation.price ? selectedVariation.price : product.price) : product.price, product.currency)} 
               </span>
               <div
                 className={`flex items-center gap-1 text-sm px-3 py-1 rounded-full font-medium ${

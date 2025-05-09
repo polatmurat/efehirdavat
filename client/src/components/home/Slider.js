@@ -34,7 +34,7 @@ const Slider = () => {
                 </h1>
                 <div className="mt-10">
                   <Link
-                    to={`/cat-products/${cat.name}`}
+                    to={`/cat-products/${cat._id}`}
                     className="btn btn-indigo text-sm"
                   >
                     Kategoriyi İncele

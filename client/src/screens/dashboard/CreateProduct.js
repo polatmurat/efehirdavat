@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom"
 import { useDispatch } from "react-redux"
-import { TwitterPicker } from "react-color"
-import { v4 as uuidv4 } from 'uuid';
 import ReactQuill from "react-quill"
 import toast, { Toaster } from 'react-hot-toast';
 import 'react-quill/dist/quill.snow.css';
@@ -11,8 +9,6 @@ import Wrapper from "./Wrapper"
 import { useAllCategoriesQuery } from "../../store/services/categoryService"
 import { useCProductMutation } from "../../store/services/productService";
 import Spinner from "../../components/Spinner"
-import Colors from "../../components/Colors";
-import SizesList from "../../components/SizesList";
 import ImagesPreview from "../../components/ImagesPreview";
 import ProductVariations from "../../components/ProductVariations";
 import { setSuccess } from "../../store/reducers/globalReducer";
@@ -26,9 +22,9 @@ const CreateProduct = () => {
         currency: 'TL',
         discount: 0,
         stock: 0,
+        categoryId: '',
         category: '',
         isAvailable: true,
-        colors: [],
         image1: '',
         image2: '',
         image3: ''
@@ -38,8 +34,6 @@ const CreateProduct = () => {
         image2: '',
         image3: ''
     });
-    const [sizeInput, setSizeInput] = useState('');
-    const [sizeList, setSizeList] = useState([]);
     const [preview, setPreview] = useState({
         image1: '',
         image2: '',
@@ -55,7 +49,6 @@ const CreateProduct = () => {
                 setPreview({ ...preview, [e.target.name]: reader.result })
             }
             reader.readAsDataURL(e.target.files[0]);
-            // URL alanını temizle
             setImageUrls({ ...imageUrls, [e.target.name]: '' });
         }
     }
@@ -64,48 +57,24 @@ const CreateProduct = () => {
         const { name, value } = e.target;
         setImageUrls({ ...imageUrls, [name]: value });
 
-        // URL girildiğinde preview'i güncelle
         if (value.trim() !== '') {
             setPreview({ ...preview, [name]: value });
-            // Dosya alanını temizle
             setState({ ...state, [name]: '' });
         }
     }
 
     const handleInput = e => {
-        setState({ ...state, [e.target.name]: e.target.value })
-    }
-    const saveColors = (color) => {
-        const filtered = state.colors.filter((clr) => clr.color !== color.hex);
-        setState({ ...state, colors: [...filtered, { color: color.hex, id: uuidv4() }] })
-    }
-    const deleteColor = color => {
-        const filtered = state.colors.filter(clr => clr.color !== color.color);
-        setState({ ...state, colors: filtered });
-    }
-
-    const addSize = () => {
-        if (sizeInput.trim() !== '') {
-            const newSize = { name: sizeInput.trim() };
-            setSizeList([...sizeList, newSize]);
-            setSizeInput('');
+        const { name, value } = e.target;
+        if (name === 'categoryId') {
+            const selectedCategory = data?.categories?.find(cat => cat._id === value);
+            setState({
+                ...state,
+                categoryId: value,
+                category: selectedCategory ? selectedCategory.name : ''
+            });
+        } else {
+            setState({ ...state, [name]: value });
         }
-    }
-
-    const handleSizeInputChange = (e) => {
-        setSizeInput(e.target.value);
-    }
-
-    const handleSizeKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            addSize();
-        }
-    }
-
-    const deleteSize = name => {
-        const filtered = sizeList.filter(size => size.name !== name);
-        setSizeList(filtered);
     }
 
     const handleVariationsChange = (updatedVariations) => {
@@ -117,10 +86,13 @@ const CreateProduct = () => {
         e.preventDefault();
         const formData = new FormData();
 
-        // Ürün verilerini hazırla
         const productData = { ...state };
 
-        // Eğer ana fiyat ve stok girilmemişse, varyasyonlardan en düşük fiyatlı olanı kullan
+        if (productData.categoryId === '') {
+            productData.categoryId = null;
+            productData.category = 'diğer';
+        }
+
         if (variations.length > 0) {
             const lowestPriceVariation = variations.reduce((lowest, current) => {
                 return current.price < lowest.price ? current : lowest;
@@ -134,31 +106,29 @@ const CreateProduct = () => {
             }
         }
 
-        // URL ile girilen resimleri ekle
         if (imageUrls.image1) productData.image1 = imageUrls.image1;
         if (imageUrls.image2) productData.image2 = imageUrls.image2;
         if (imageUrls.image3) productData.image3 = imageUrls.image3;
 
         formData.append('data', JSON.stringify(productData));
-        formData.append('sizes', JSON.stringify(sizeList));
         formData.append('description', value);
         formData.append('variations', JSON.stringify(variations));
 
-        // Dosya olarak yüklenen resimleri ekle
         if (state.image1 && state.image1 instanceof File) formData.append('image1', state.image1);
         if (state.image2 && state.image2 instanceof File) formData.append('image2', state.image2);
         if (state.image3 && state.image3 instanceof File) formData.append('image3', state.image3);
 
         createNewProduct(formData);
     }
+
     useEffect(() => {
         if (!response.isSuccess && response?.error?.data?.errors) {
-            // Handle validation errors
             Object.values(response.error.data.errors).forEach(err => {
                 toast.error(err.properties?.message || 'Validation error');
             });
         }
     }, [response?.error?.data?.errors])
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
     useEffect(() => {
@@ -167,6 +137,7 @@ const CreateProduct = () => {
             navigate('/dashboard/products');
         }
     }, [response?.isSuccess])
+
     const handleCurrencyChange = (currency) => {
         setState({ ...state, currency: currency });
     }
@@ -174,6 +145,7 @@ const CreateProduct = () => {
     const handleAvailability = (isAvailable) => {
         setState({ ...state, isAvailable: isAvailable });
     }
+
     return (
         <Wrapper>
             <ScreenHeader>
@@ -247,41 +219,20 @@ const CreateProduct = () => {
                         </div>
                         <div className="w-full md:w-6/12 p-3">
                             <label htmlFor="categories" className="label">Kategoriler</label>
-                            {!isFetching ? data?.categories?.length > 0 && <select name="category" id="categories" className="form-control uppercase" onChange={handleInput} value={state.category}>
+                            {!isFetching ? data?.categories?.length > 0 && <select 
+                                name="categoryId" 
+                                id="categories" 
+                                className="form-control uppercase" 
+                                onChange={handleInput} 
+                                value={state.categoryId}
+                            >
                                 <option value="">Kategori seçiniz</option>
                                 {data?.categories?.map(category => (
-                                    <option value={category.name} key={category._id} className="uppercase">{category.name}</option>
+                                    <option value={category._id} key={category._id} className="uppercase">
+                                        {category.name}
+                                    </option>
                                 ))}
                             </select> : <Spinner />}
-                        </div>
-                        <div className="w-full md:w-6/12 p-3">
-                            <label htmlFor="colors" className="label">Renk Seçiniz</label>
-                            <TwitterPicker onChangeComplete={saveColors} />
-                        </div>
-
-                        <div className="w-full p-3">
-                            <label htmlFor="sizes" className="label">Boyut Seçiniz</label>
-                            <div className="flex flex-wrap -mx-3">
-                                <div className="w-full md:w-8/12 p-3">
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder="Boyut giriniz..."
-                                        value={sizeInput}
-                                        onChange={handleSizeInputChange}
-                                        onKeyPress={handleSizeKeyPress}
-                                    />
-                                </div>
-                                <div className="w-full md:w-4/12 p-3">
-                                    <button
-                                        type="button"
-                                        className="btn btn-indigo w-20"
-                                        onClick={addSize}
-                                    >
-                                        Ekle
-                                    </button>
-                                </div>
-                            </div>
                         </div>
 
                         {/* Ürün Varyasyonları */}
@@ -370,8 +321,6 @@ const CreateProduct = () => {
                     </div>
                 </form>
                 <div className="w-full xl:w-4/12 p-3">
-                    <Colors colors={state.colors} deleteColor={deleteColor} />
-                    <SizesList list={sizeList} deleteSize={deleteSize} />
                     <ImagesPreview url={preview.image1} heading="image 1" />
                     <ImagesPreview url={preview.image2} heading="image 2" />
                     <ImagesPreview url={preview.image3} heading="image 3" />

@@ -112,6 +112,7 @@ class Product {
             const normalizedTitle = normalizeText(title);
             const normalizedDescription = normalizeText(description);
             const category = typeof parsedData.category === 'string' ? parsedData.category.toLowerCase() : 'diğer';
+            const categoryId = parsedData.categoryId && parsedData.categoryId !== '' ? parsedData.categoryId : null;
             const isAvailable = parsedData.hasOwnProperty("isAvailable") ? parsedData.isAvailable : true;
 
             // Varyasyonlar varsa stock ve price hesapla
@@ -141,6 +142,7 @@ class Product {
               discount: parseInt(parsedData.discount) || 0,
               stock: totalStock,
               category: category,
+              categoryId: categoryId,
               isAvailable: isAvailable,
               variations: variations,
               image1: images["image1"] ? images["image1"] : (typeof parsedData.image1 === 'string' ? parsedData.image1 : ''),
@@ -275,6 +277,7 @@ class Product {
             const normalizedTitle = normalizeText(title);
             const normalizedDescription = normalizeText(description);
             const category = typeof parsedData.category === 'string' ? parsedData.category.toLowerCase() : 'diğer';
+            const categoryId = parsedData.categoryId && parsedData.categoryId !== '' ? parsedData.categoryId : null;
             const isAvailable = parsedData.hasOwnProperty("isAvailable") ? parsedData.isAvailable : true;
 
             // Varyasyonlar varsa stock ve price hesapla
@@ -303,6 +306,7 @@ class Product {
               currency: parsedData.currency || 'TL',
               discount: parseInt(parsedData.discount) || 0,
               stock: totalStock,
+              categoryId: categoryId,
               category: category,
               isAvailable: isAvailable,
               description: description,
@@ -370,12 +374,22 @@ class Product {
     }
   }
 
-  async deleteAll(req, res) {
+  async getProductsByCategory(req, res) {
+    const { categoryId } = req.params;
+    console.log(categoryId);
+    
     try {
-      await ProductModel.deleteMany({});
-      return true;
+      // categoryId'ye göre ürünleri filtrele
+      const products = await ProductModel.find({ categoryId: categoryId });
+      
+      if (!products || products.length === 0) {
+        return res.status(200).json({ products: [] });
+      }
+
+      return res.status(200).json({ products });
     } catch (error) {
-      return false;
+      console.log('Kategori ürünleri getirme hatası:', error);
+      return res.status(500).json({ error: error.message });
     }
   }
 }

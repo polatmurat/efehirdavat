@@ -23,16 +23,18 @@ function normalizeText(text) {
 
 class HomeProducts {
   async catProducts(req, res) {
-    const { name, page, keyword } = req.params;
+    const { categoryId, page, keyword } = req.params;
+    console.log("deneme", req.params);
+    
     const perPage = 12;
     const skip = (page - 1) * perPage;
     
     // Arama seçeneklerini belirle
     let options = {};
     
-    if (name) {
-      // Kategori bazlı arama
-      options = { category: name };
+    if (categoryId) {
+      // Kategori ID bazlı arama
+      options = { categoryId: categoryId };
     } else if (keyword) {
       // Anahtar kelime bazlı arama - büyük/küçük harf duyarsız ve Türkçe karakter duyarsız
       
@@ -81,7 +83,7 @@ class HomeProducts {
         const response = await ProductModel.find(options)
           .skip(skip)
           .limit(perPage)
-          .sort({ updatedAt: -1 });
+          .sort({ createdAt: -1, _id: 1 });
         
         return res.status(200).json({ products: response, perPage, count });
       } catch (error) {
@@ -92,7 +94,8 @@ class HomeProducts {
       try {
         const response = await ProductModel.find(options)
           .limit(4)
-          .sort({ updatedAt: -1 });
+          .sort({ createdAt: -1, 
+           });
         return res.status(200).json({ products: response });
       } catch (error) {
         console.log(error.message);
