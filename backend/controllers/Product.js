@@ -376,7 +376,6 @@ class Product {
 
   async getProductsByCategory(req, res) {
     const { categoryId } = req.params;
-    console.log(categoryId);
     
     try {
       // categoryId'ye göre ürünleri filtrele

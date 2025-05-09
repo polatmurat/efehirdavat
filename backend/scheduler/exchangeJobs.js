@@ -30,7 +30,6 @@ const fetchandSaveExchanges = async () => {
         await upsertRate('USD', rates.USD.replace(",", "."));
         await upsertRate('EUR', rates.EUR.replace(",", "."));
 
-        console.log('Kur bilgileri güncellendi.');
 
     } catch (error) {
         console.error('Kur bilgisi alınamadı:', error.message);

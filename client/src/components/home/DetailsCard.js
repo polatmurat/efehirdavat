@@ -39,14 +39,6 @@ const DetailsCard = ({ product }) => {
     return acc;
   }, {}) || {};
 
-  // Seçilen boyut veya renge göre varyasyonu bul
-  const findVariation = (size, color) => {
-    return product.variations?.find(v => 
-      (size ? v.size === size : !v.size) && 
-      (color ? v.color === color : !v.color)
-    );
-  };
-
   // Varyasyon seçildiğinde fiyatı güncelle
   const handleVariationSelect = (variation) => {
     setSelectedVariation(variation);
@@ -127,15 +119,6 @@ const DetailsCard = ({ product }) => {
     }
   }, [product]);
 
-  console.log(product);
-  
-
-  const [sizeState, setSizeState] = useState(
-    product?.sizes?.length > 0 ? product.sizes[0] : null
-  );
-  const [colorState, setColorState] = useState(
-    product?.colors?.length > 0 ? product.colors[0].color : null
-  );
   
   let desc = h2p(product.description);
   desc = htmlParser(desc);

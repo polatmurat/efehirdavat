@@ -24,7 +24,6 @@ function normalizeText(text) {
 class HomeProducts {
   async catProducts(req, res) {
     const { categoryId, page, keyword } = req.params;
-    console.log("deneme", req.params);
     
     const perPage = 12;
     const skip = (page - 1) * perPage;

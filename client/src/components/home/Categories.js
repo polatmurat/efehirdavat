@@ -65,7 +65,7 @@ const Categories = () => {
             >
               <div className="w-full h-[150px] rounded-lg overflow-hidden">
                 <img
-                  src={`../images/category_banners/${(category.name).toLowerCase()}.jpg`}
+                  src={index < 14 ? `../images/category_banners/${category._id}.jpg` : `../images/category_banners/67f567aaf101150ce62f96a4.jpg`}
                   className="w-full h-full object-cover"
                   alt=""
                 />
@@ -83,14 +83,14 @@ const Categories = () => {
         </Swiper>
 
         <div className="flex justify-center items-center gap-8 my-8">
-          <button 
+          <button
             className="flex items-center justify-center w-16 h-16 bg-blue-500 rounded-full text-white text-2xl shadow-lg hover:bg-blue-600 transition-colors"
             onClick={() => swiperRef.current?.slidePrev()}
             aria-label="Önceki slide"
           >
             &#10094;
           </button>
-          <button 
+          <button
             className="flex items-center justify-center w-16 h-16 bg-green-500 rounded-full text-white text-2xl shadow-lg hover:bg-green-600 transition-colors"
             onClick={() => swiperRef.current?.slideNext()}
             aria-label="Sonraki slide"

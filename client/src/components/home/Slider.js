@@ -22,7 +22,7 @@ const Slider = () => {
           <SwiperSlide className="slide" key={cat._id}>
             <div className={`slide-img`}>
               <img
-                src={index < 14 ? `../images/category_banners/${cat.name}.jpg` : `../images/category_banners/teknik hırdavat.jpg`}
+                src={index < 14 ? `../images/category_banners/${cat._id}.jpg` : `../images/category_banners/67f567aaf101150ce62f96a4.jpg`}
                 className="w-full h-full object-cover"
                 alt=""
               />
