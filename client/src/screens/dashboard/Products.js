@@ -17,12 +17,20 @@ const Products = () => {
       page = 1;
    }
    const [searchTerm, setSearchTerm] = useState("");
+   const [selectedCategoryId, setSelectedCategoryId] = useState("");
    const [debouncedSearchTerm] = useDebounce(searchTerm, 500); // 500ms debounce   
 
    // Eğer arama terimi varsa, arama sonuçlarını çekiyoruz
-   const { data: searchData = {}, isFetching: isSearching } = useSearchProductsQuery({ page, search: debouncedSearchTerm });
+   const { data: searchData = {}, isFetching: isSearching } = useSearchProductsQuery({ 
+       page, 
+       search: debouncedSearchTerm,
+       categoryId: selectedCategoryId 
+   });
    // Eğer arama terimi yoksa, tüm ürünleri çekiyoruz
-   const { data: productsData = {}, isFetching: isFetchingProducts } = useGetProductsQuery({ page });
+   const { data: productsData = {}, isFetching: isFetchingProducts } = useGetProductsQuery({ 
+       page,
+       categoryId: selectedCategoryId 
+   });
 
    const { success } = useSelector(state => state.globalReducer);
    const dispatch = useDispatch();
@@ -46,6 +54,10 @@ const Products = () => {
 
    const handleSearchChange = (e) => {
       setSearchTerm(e.target.value);
+   };
+
+   const handleCategoryChange = (e) => {
+       setSelectedCategoryId(e.target.value);
    };
 
    // Eğer arama yapılıyorsa, arama sonuçlarını gösteriyoruz; yoksa tüm ürünleri.
@@ -110,6 +122,22 @@ const Products = () => {
          ) : (
             <Spinner />
          )}
+
+         <div className="w-full md:w-6/12 p-3">
+            <label htmlFor="categories" className="label">Kategoriler</label>
+            {!isFetchingProducts && !isSearching ? dataToDisplay?.categories?.length > 0 && <select 
+                name="categoryId" 
+                id="categories" 
+                className="form-control uppercase" 
+                onChange={handleCategoryChange} 
+                value={selectedCategoryId}
+            >
+               <option value="">Tüm Kategoriler</option>
+               {dataToDisplay?.categories?.map(category => (
+                  <option value={category._id} key={category._id} className="uppercase">{category.name}</option>
+               ))}
+            </select> : <Spinner />}
+         </div>
       </Wrapper>
    );
 };

@@ -72,7 +72,7 @@ const Categories = () => {
               </div>
               <div className="absolute inset-0 w-full h-full bg-black/50 flex items-center justify-center p-4 uppercase">
                 <Link
-                  to={`/cat-products/${category.name}`}
+                  to={`/cat-products/${category._id}`}
                   className="text-white text-base font-medium capitalize"
                 >
                   {category.name}

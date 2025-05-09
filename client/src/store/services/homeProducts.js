@@ -10,7 +10,7 @@ const homeProducts = createApi({
       catProducts: builder.query({
         query: (params) => {
           return {
-            url: `/cat-products/${params.name}/${params.page}`,
+            url: `/cat-products/${params.categoryId}/${params.page}`,
             method: "GET",
           };
         },

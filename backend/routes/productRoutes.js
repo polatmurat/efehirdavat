@@ -15,7 +15,7 @@ router.put(
   Product.updateProduct
 );
 router.delete("/delete/:id", Authorization.authorized, Product.deleteProduct);
-router.get("/cat-products/:name/:page?", HomeProducts.catProducts);
+router.get("/cat-products/:categoryId/:page?", HomeProducts.catProducts);
 router.get("/search-products/:keyword/:page?", HomeProducts.catProducts);
 // Tüm ürünlerin normalize edilmiş alanlarını güncelle
 module.exports = router;
