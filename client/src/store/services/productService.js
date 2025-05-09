@@ -44,10 +44,13 @@ const productService = createApi({
                 invalidatesTags: ['products']
             }),
             getProducts: builder.query({
-                query: ({ page = 1, search = '' }) => {
+                query: ({ page = 1, search = '', categoryId }) => {
                  let url = `/products/${page}`;
                  if (search) {
                    url += `?search=${encodeURIComponent(search)}`;
+                 }
+                 if (categoryId) {
+                   url += `?categoryId=${categoryId}`;
                  }
                  return {
                      url,
@@ -73,9 +76,16 @@ const productService = createApi({
                 }
                 },
                 providesTags: ['products']
+            }),
+            getProductsByCategory: builder.query({
+                query: (categoryId) => ({
+                    url: `/get-products-by-category/${categoryId}`,
+                    method: 'GET'
+                }),
+                providesTags: ['products']
             })
         }
     }
 })
-export const {useCProductMutation, useDeleteProductMutation , useUpdateProductMutation, useGetProductsQuery, useGetProductQuery, useSearchProductsQuery} = productService;
+export const {useCProductMutation, useDeleteProductMutation , useUpdateProductMutation, useGetProductsQuery, useGetProductQuery, useSearchProductsQuery, useGetProductsByCategoryQuery} = productService;
 export default productService

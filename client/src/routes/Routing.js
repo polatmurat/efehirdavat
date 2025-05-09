@@ -28,8 +28,8 @@ const Routing = () => {
         <Route path="/page/:page" element={<Home />} />
         <Route path="/all-products/:page" element={<AllProducts />} />
         <Route path="*" element={<Navigate to="/page/1" />} />
-        <Route path="cat-products/:name" element={<CatProducts />} />
-        <Route path="cat-products/:name/:page" element={<CatProducts />} />
+        <Route path="cat-products/:categoryId" element={<CatProducts />} />
+        <Route path="cat-products/:categoryId/:page" element={<CatProducts />} />
         <Route
           path="search-products/:keyword/:page"
           element={<SearchProducts />}

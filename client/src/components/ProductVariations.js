@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TwitterPicker } from "react-color";
 import { v4 as uuidv4 } from "uuid";
+import toast from "react-hot-toast";
 
 const ProductVariations = ({ variations = [], onVariationsChange }) => {
   const [variationForm, setVariationForm] = useState({
@@ -33,7 +34,13 @@ const ProductVariations = ({ variations = [], onVariationsChange }) => {
 
   const addVariation = () => {
     // Sadece boyut VEYA renk olmalı, ikisi birden olmamalı
-    if ((!variationForm.size && !variationForm.color) || (variationForm.size && variationForm.color)) {
+    if (variationForm.size && variationForm.color) {
+      toast.error("Lütfen sadece boyut VEYA renk seçiniz, ikisini birden seçemezsiniz!");
+      return;
+    }
+
+    if (!variationForm.size && !variationForm.color) {
+      toast.error("Lütfen en az bir varyasyon (boyut veya renk) seçiniz!");
       return;
     }
 
@@ -115,10 +122,24 @@ const ProductVariations = ({ variations = [], onVariationsChange }) => {
             </label>
             <div className="flex items-center">
               <div 
-                className="w-8 h-8 mr-2 border cursor-pointer"
+                className="w-8 h-8 mr-2 border cursor-pointer relative"
                 style={{ backgroundColor: selectedColor || "#fff" }}
                 onClick={() => setShowColorPicker(!showColorPicker)}
-              />
+              >
+                {selectedColor && (
+                  <button
+                    type="button"
+                    className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedColor("");
+                      setVariationForm(prev => ({ ...prev, color: "" }));
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
               <button
                 type="button"
                 className="size text-gray-700 font-semibold bg-white"

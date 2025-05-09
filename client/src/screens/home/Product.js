@@ -5,9 +5,11 @@ import Nav from "../../components/home/Nav";
 import DetailsCard from "../../components/home/DetailsCard";
 import ProductLoader from "../../components/home/ProductLoader";
 
-const Product = () => {
+const Product = () => { 
   const { name } = useParams();
   const { data, isFetching } = useGetProductQuery(name);
+  console.log(data, name);
+  
   return (
     <>
       <Nav />
@@ -22,7 +24,7 @@ const Product = () => {
               </li>
               <FiChevronRight className="block mx-2" />
               <li className="capitalize text-gray-600">
-                <Link to={`/cat-products/${data.category}`}>
+                <Link to={`/cat-products/${data.categoryId}`}>
                   {data.category}
                 </Link>
               </li>
